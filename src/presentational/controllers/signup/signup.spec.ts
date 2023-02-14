@@ -20,15 +20,6 @@ const makeEmailValidator = (): EmailValidator => {
   return new EmailValidatorStub();
 };
 
-const makeEmailValidatorWithError = (): EmailValidator => {
-  class EmailValidatorStub implements EmailValidator {
-    isValid(email: string): boolean {
-      throw new Error();
-    }
-  }
-  return new EmailValidatorStub();
-};
-
 const makeSut = (): MakeSutTypes => {
   const emailValidatorStub = makeEmailValidator();
 
@@ -105,6 +96,25 @@ describe("SignUpController", () => {
     );
   });
 
+  test("should return 400 if password and passwordConfirmation are different", () => {
+    const { sut } = makeSut();
+
+    const httpRequest = {
+      body: {
+        email: "any_email@email.com",
+        name: "any_name",
+        password: "any_password",
+        passwordConfirmation: "another_password",
+      },
+    };
+
+    const httpResponse = sut.handler(httpRequest);
+    expect(httpResponse.statusCode).toBe(400);
+    expect(httpResponse.body).toEqual(
+      new InvalidParamError("passwordConfirmation")
+    );
+  });
+
   test("should return 400 if an invalid email is provided", () => {
     const { sut, emailValidatorStub } = makeSut();
 
@@ -143,8 +153,11 @@ describe("SignUpController", () => {
   });
 
   test("should return 500 if email validator throws", () => {
-    const emailValidatorStub = makeEmailValidatorWithError();
-    const sut = new SignUpController(emailValidatorStub);
+    const { sut, emailValidatorStub } = makeSut();
+
+    jest.spyOn(emailValidatorStub, "isValid").mockImplementationOnce(() => {
+      throw new Error();
+    });
 
     const httpRequest = {
       body: {
