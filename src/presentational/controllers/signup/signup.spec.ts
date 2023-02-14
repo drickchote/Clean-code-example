@@ -3,7 +3,7 @@ import {
   MissingParamError,
   ServerError,
 } from "../../errors/";
-import { EmailValidator } from "../../protocols/email-validator";
+import { EmailValidator } from "../../protocols";
 import { SignUpController } from "./signup";
 
 interface MakeSutTypes {
