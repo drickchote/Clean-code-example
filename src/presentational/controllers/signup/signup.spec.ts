@@ -1,3 +1,5 @@
+import { AccountModel } from "../../../domain/models/account";
+import { AddAccount, AddAccountModel } from "../../../domain/usecases/add-account";
 import {
   InvalidParamError,
   MissingParamError,
@@ -9,6 +11,7 @@ import { SignUpController } from "./signup";
 interface MakeSutTypes {
   sut: SignUpController;
   emailValidatorStub: EmailValidator;
+  addAccountStub: AddAccount;
 }
 
 const makeEmailValidator = (): EmailValidator => {
@@ -20,12 +23,24 @@ const makeEmailValidator = (): EmailValidator => {
   return new EmailValidatorStub();
 };
 
+const makeAddAccountStub = (): AddAccount => {
+  class AddAccountStub implements AddAccount {
+    add(user: AddAccountModel): AccountModel {
+      return {...user, id: '1'};
+    }
+  }
+
+  return new AddAccountStub();
+};
+
 const makeSut = (): MakeSutTypes => {
   const emailValidatorStub = makeEmailValidator();
+  const addAccountStub = makeAddAccountStub();
 
   return {
-    sut: new SignUpController(emailValidatorStub),
+    sut: new SignUpController(emailValidatorStub, addAccountStub),
     emailValidatorStub: emailValidatorStub,
+    addAccountStub: addAccountStub,
   };
 };
 
@@ -171,5 +186,27 @@ describe("SignUpController", () => {
     const httpResponse = sut.handler(httpRequest);
     expect(httpResponse.statusCode).toBe(500);
     expect(httpResponse.body).toEqual(new ServerError());
+  });
+
+  test("should call AddAccount with correct values", () => {
+    const { sut, addAccountStub } = makeSut();
+
+    const addAccountSpy = jest.spyOn(addAccountStub, "add");
+
+    const httpRequest = {
+      body: {
+        email: "any_email@email.com",
+        name: "any_name",
+        password: "any_password",
+        passwordConfirmation: "any_password",
+      },
+    };
+
+    sut.handler(httpRequest);
+    expect(addAccountSpy).toHaveBeenCalledWith({
+      email: "any_email@email.com",
+      name: "any_name",
+      password: "any_password",
+    });
   });
 });
