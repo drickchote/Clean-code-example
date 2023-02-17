@@ -21,10 +21,10 @@ const makeEmailValidator = (): EmailValidator => {
   return new EmailValidatorStub();
 };
 
-const makeAddAccountStub = (): AddAccount => {
+const makeAddAccount = (): AddAccount => {
   class AddAccountStub implements AddAccount {
     add(user: AddAccountModel): AccountModel {
-      return {...user, id: '1'};
+      return {...user, id: 'valid_id'};
     }
   }
 
@@ -33,7 +33,7 @@ const makeAddAccountStub = (): AddAccount => {
 
 const makeSut = (): MakeSutTypes => {
   const emailValidatorStub = makeEmailValidator();
-  const addAccountStub = makeAddAccountStub();
+  const addAccountStub = makeAddAccount();
 
   return {
     sut: new SignUpController(emailValidatorStub, addAccountStub),
@@ -227,5 +227,27 @@ describe("SignUpController", () => {
     const httpResponse = sut.handler(httpRequest);
     expect(httpResponse.statusCode).toBe(500);
     expect(httpResponse.body).toEqual(new ServerError());
+  });
+
+  test("should return 200 if valid data is provided", () => {
+    const { sut } = makeSut();
+
+    const httpRequest = {
+      body: {
+        name: "valid_name",
+        email: "valid_email@email.com",
+        password: "valid_password",
+        passwordConfirmation: "valid_password",
+      },
+    };
+
+    const httpResponse = sut.handler(httpRequest);
+    expect(httpResponse.statusCode).toBe(200);
+    expect(httpResponse.body).toEqual({
+        id: 'valid_id',
+        name: "valid_name",
+        email: "valid_email@email.com",
+        password: "valid_password",
+    });
   });
 });
