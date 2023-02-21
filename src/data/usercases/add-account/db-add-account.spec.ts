@@ -91,4 +91,23 @@ describe("DbAddAccount Usecase", () => {
       password: "encrypted_password",
     });
   });
+
+  test("Should throw if AddAccountRepository throws", async () => {
+    const { sut, addAccountRepositoryStub } = makeSut();
+
+    jest
+      .spyOn(addAccountRepositoryStub, "add")
+      .mockReturnValueOnce(
+        new Promise((resolve, reject) => reject(new Error()))
+      );
+
+    const accountData = {
+      name: "valid_name",
+      email: "valid_email",
+      password: "valid_password",
+    };
+
+    const accountPromise = sut.add(accountData);
+    await expect(accountPromise).rejects.toThrow();
+  });
 });
