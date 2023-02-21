@@ -13,7 +13,7 @@ export class DbAddAccount implements AddAccount {
   }
 
   async add(user: AddAccountModel): Promise<AccountModel> {
-    this.encrypter.encrypt(user.password);
+    await this.encrypter.encrypt(user.password);
     return new Promise((resolve) => resolve(null));
   }
 }
