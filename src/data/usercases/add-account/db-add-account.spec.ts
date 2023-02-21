@@ -1,12 +1,16 @@
 import { DbAddAccount } from "./db-add-account";
 
-const makeSut = () => {
+const makeEcrypterStub = () => {
   class EncrypterStub {
-    async encrypt(value: string): Promise<string> {
+    async encrypt(text: string): Promise<string> {
       return new Promise((resolve) => resolve("encrypted_password"));
     }
   }
-  const encrypterStub = new EncrypterStub();
+  return new EncrypterStub();
+};
+
+const makeSut = () => {
+  const encrypterStub = makeEcrypterStub();
   const sut = new DbAddAccount(encrypterStub);
 
   return {
@@ -33,7 +37,11 @@ describe("DbAddAccount Usecase", () => {
   test("Should throw if Encrypter throws", async () => {
     const { sut, encrypterStub } = makeSut();
 
-    jest.spyOn(encrypterStub, "encrypt").mockReturnValueOnce(new Promise((resolve, reject) => reject(new Error())));
+    jest
+      .spyOn(encrypterStub, "encrypt")
+      .mockReturnValueOnce(
+        new Promise((resolve, reject) => reject(new Error()))
+      );
 
     const accountData = {
       name: "valid_name",
@@ -42,6 +50,6 @@ describe("DbAddAccount Usecase", () => {
     };
 
     const accountPromise = sut.add(accountData);
-    await expect(accountPromise).rejects.toThrow()
+    await expect(accountPromise).rejects.toThrow();
   });
 });
