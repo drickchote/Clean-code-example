@@ -1,4 +1,3 @@
-import { Encrypter } from "../../data/protocols/encrypter";
 import bcrypt from 'bcrypt'
 import { BcryptAdapter } from "./bcrypt-adapter";
 
